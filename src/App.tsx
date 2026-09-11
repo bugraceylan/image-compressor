@@ -85,9 +85,9 @@ function App() {
               <CompressedImagesGrid compressedImages={compressedImages} />
             )}
           </div>
-          <Footer />
           <Toaster />
         </main>
+        <Footer />
       </div>
     </ThemeProvider>
   );
