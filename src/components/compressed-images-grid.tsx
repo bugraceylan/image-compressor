@@ -1,4 +1,5 @@
 import { downloadSingleImage } from "@/lib/download";
+import { formatBytes } from "@/lib/utils";
 import { Inbox } from "lucide-react";
 import { PhotoProvider } from "react-photo-view";
 import type { CompressedImage } from "../types/image-compressor";
@@ -24,6 +25,17 @@ const CompressedImagesGrid = ({
     );
   }
 
+  const totalOriginal = compressedImages.reduce(
+    (sum, image) => sum + image.originalImageSize,
+    0
+  );
+  const totalFinal = compressedImages.reduce(
+    (sum, image) => sum + image.compressedImageSize,
+    0
+  );
+  const saved = totalOriginal - totalFinal;
+  const savedPercentage = ((Math.abs(saved) / totalOriginal) * 100).toFixed(2);
+
   return (
     <PhotoProvider>
       <div className="grid grid-cols-1 gap-4 py-4 will-change-transform md:grid-cols-2 lg:grid-cols-3">
@@ -39,6 +51,33 @@ const CompressedImagesGrid = ({
             />
           </div>
         ))}
+      </div>
+      <div className="animate-fadeInFast mb-4 grid grid-cols-1 gap-3 rounded-lg border p-3 text-sm sm:grid-cols-3">
+        <div>
+          <p className="text-muted-foreground">
+            Total original ({compressedImages.length}{" "}
+            {compressedImages.length === 1 ? "image" : "images"})
+          </p>
+          <p className="text-destructive text-base font-bold">
+            {formatBytes(totalOriginal)}
+          </p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">
+            {saved >= 0 ? "Saved" : "Size increase"}
+          </p>
+          <p
+            className={`text-base font-bold ${saved >= 0 ? "text-success" : "text-destructive"}`}
+          >
+            {formatBytes(Math.abs(saved))} ({savedPercentage}%)
+          </p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Final size</p>
+          <p className="text-success text-base font-bold">
+            {formatBytes(totalFinal)}
+          </p>
+        </div>
       </div>
     </PhotoProvider>
   );
