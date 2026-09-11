@@ -16,20 +16,6 @@ const Intro = () => {
             private.
           </p>
         </div>
-        {/* Buttons */}
-        {/* <div className="mt-4 flex justify-center">
-          <a
-            href="https://www.producthunt.com/posts/image-compressor-4?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-image-compressor-4"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=866606&theme=light"
-              alt="Image Compressor - Compress images fast, securely, and for free—no API call | Product Hunt"
-              style={{ width: "187.5px", height: "40.5px" }}
-            />
-          </a>
-        </div> */}
       </div>
     </section>
   );

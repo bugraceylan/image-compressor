@@ -16,10 +16,10 @@ const Footer = () => {
         by{" "}
         <a
           target="_blank"
-          href="https://github.com/abue-ammar"
+          href="https://github.com/bugraceylan"
           className="text-primary hover:text-primary-foreground underline transition-colors"
         >
-          Abue Ammar
+          Bugra Ceylan
         </a>
       </span>
     </footer>
