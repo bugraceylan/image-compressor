@@ -9,6 +9,9 @@ export const compressImage = async (
   scale: number,
   stripMetadata: boolean
 ): Promise<string> => {
+  // Browsers encode PNG losslessly and ignore quality, so PNG is re-encoded as JPEG:
+  // it shrinks and opens everywhere (Office, Outlook). compressorjs paints
+  // transparent areas white for JPEG output.
   const isPng = file.type === "image/png";
 
   // Scale applies to the displayed (EXIF-oriented) size: createImageBitmap reports it,
@@ -31,7 +34,7 @@ export const compressImage = async (
       width: undefined,
       height: undefined,
       quality: quality / 100,
-      mimeType: isPng ? "image/webp" : "auto",
+      mimeType: isPng ? "image/jpeg" : "auto",
       convertSize: Infinity,
       convertTypes: [],
       // Canvas re-encoding drops all metadata; retainExif copies EXIF back (JPEG only).
@@ -100,12 +103,14 @@ export const processImages = async (
     const useFallback =
       fallback !== null && compressedImageSize >= fallback.size;
 
-    // PNG is re-encoded as WebP, so the extension must follow the actual output type.
+    // PNG is re-encoded as JPEG, so the extension must follow the actual output type.
     const outputType = useFallback
       ? file.type
       : compressedImg.slice(5, compressedImg.indexOf(";"));
     const outputExt =
-      outputType === file.type ? originalExt : "." + outputType.split("/")[1];
+      outputType === file.type
+        ? originalExt
+        : "." + outputType.split("/")[1].replace("jpeg", "jpg");
 
     let finalContent: string;
     let finalSize: number;
