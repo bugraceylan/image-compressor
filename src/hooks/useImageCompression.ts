@@ -10,6 +10,8 @@ export const useImageCompression = () => {
   const [zipFile, setZipFile] = useState<Blob | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [value, setValue] = useState<number>(60);
+  const [scale, setScale] = useState<number>(100);
+  const [stripMetadata, setStripMetadata] = useState<boolean>(true);
   const [filelist, setFilelist] = useState<FileList | File[]>([]);
   const [compressProgress, setCompressProgress] = useState<number>(0);
 
@@ -27,8 +29,20 @@ export const useImageCompression = () => {
     setValue(parseInt(event.target.value, 10));
   };
 
+  const onResolutionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setScale(parseInt(event.target.value, 10));
+  };
+
+  const onStripMetadataChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setStripMetadata(event.target.checked);
+  };
+
   const resetCompression = () => {
     setValue(60);
+    setScale(100);
+    setStripMetadata(true);
     setCompressProgress(0);
     setCompressedImages([]);
     setFilelist([]);
@@ -50,6 +64,8 @@ export const useImageCompression = () => {
     processImages(
       filesArr,
       value,
+      scale,
+      stripMetadata,
       (progress) => {
         if (!signal.aborted) setCompressProgress(progress);
       },
@@ -71,17 +87,21 @@ export const useImageCompression = () => {
       controller.abort();
       setLoading(false);
     };
-  }, [value, filelist]);
+  }, [value, scale, stripMetadata, filelist]);
 
   return {
     compressedImages,
     zipFile,
     loading,
     value,
+    scale,
+    stripMetadata,
     filelist,
     compressProgress,
     handleImageUpload,
     onImageQualityChange,
+    onResolutionChange,
+    onStripMetadataChange,
     resetCompression,
   };
 };

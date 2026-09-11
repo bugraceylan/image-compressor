@@ -5,8 +5,10 @@ import DropZone from "./components/drop-zone";
 import Footer from "./components/footer";
 import Header from "./components/header";
 import ImageQualitySlider from "./components/image-quality-slider";
+import ImageResolutionSlider from "./components/image-resolution-slider";
 import Intro from "./components/intro";
 import LoadingSpinner from "./components/loading-spinner";
+import RemoveMetadataToggle from "./components/remove-metadata-toggle";
 import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "./components/ui/sonner";
 import { useImageCompression } from "./hooks/useImageCompression";
@@ -17,10 +19,14 @@ function App() {
     zipFile,
     loading,
     value,
+    scale,
+    stripMetadata,
     filelist,
     compressProgress,
     handleImageUpload,
     onImageQualityChange,
+    onResolutionChange,
+    onStripMetadataChange,
     resetCompression,
   } = useImageCompression();
 
@@ -47,6 +53,14 @@ function App() {
           <ImageQualitySlider
             value={value}
             onImageQualityChange={onImageQualityChange}
+          />
+          <ImageResolutionSlider
+            value={scale}
+            onResolutionChange={onResolutionChange}
+          />
+          <RemoveMetadataToggle
+            checked={stripMetadata}
+            onStripMetadataChange={onStripMetadataChange}
           />
 
           <div
