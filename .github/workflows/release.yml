@@ -1,6 +1,8 @@
-# Pushing a version tag builds the image and publishes it to GHCR.
+# Pushing a version tag builds the image, publishes it to GHCR and deploys the
+# site to GitHub Pages.
 #   git tag v1.2.3 && git push origin v1.2.3
-# Result: ghcr.io/bugraceylan/image-compressor:1.2.3 and :latest
+# Result: ghcr.io/bugraceylan/image-compressor:1.2.3 and :latest,
+#         https://bugraceylan.github.io/image-compressor/
 name: release
 
 on:
@@ -35,3 +37,30 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  pages:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v5
