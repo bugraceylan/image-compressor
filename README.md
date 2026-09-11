@@ -1,4 +1,4 @@
-# SYT Compressor
+# The Compressor
 
 Browser-based image compressor. Images are processed locally in the browser; nothing is uploaded.
 
