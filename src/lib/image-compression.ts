@@ -34,7 +34,8 @@ export const compressImage = (file: File, quality: number): Promise<string> => {
 export const processImages = async (
   files: File[],
   quality: number,
-  onProgress: (progress: number) => void
+  onProgress: (progress: number) => void,
+  signal?: AbortSignal
 ): Promise<{ compressedImages: CompressedImage[]; zipFile: Blob }> => {
   const compressedImgs: CompressedImage[] = [];
   const zip = new JSZip();
@@ -42,6 +43,7 @@ export const processImages = async (
   let counter = files.length;
 
   for (const file of files) {
+    signal?.throwIfAborted();
     const compressedImg = await compressImage(file, quality);
     const base64Data = (compressedImg as string).split(",")[1];
     const binaryData = atob(base64Data);
@@ -49,11 +51,17 @@ export const processImages = async (
     const dotIndex = file.name.lastIndexOf(".");
     const baseName = dotIndex !== -1 ? file.name.slice(0, dotIndex) : file.name;
     const originalExt = dotIndex !== -1 ? file.name.slice(dotIndex) : "";
-    const outputExt = originalExt;
 
     // If compression made the file larger (e.g. re-compressing an already-lossy image),
     // fall back to the original file so we never deliver something bigger than the input.
     const useOriginal = compressedImageSize >= file.size;
+
+    // PNG is re-encoded as WebP, so the extension must follow the actual output type.
+    const outputType = useOriginal
+      ? file.type
+      : compressedImg.slice(5, compressedImg.indexOf(";"));
+    const outputExt =
+      outputType === file.type ? originalExt : "." + outputType.split("/")[1];
 
     let finalContent: string;
     let finalSize: number;
@@ -77,7 +85,7 @@ export const processImages = async (
       fileName: baseName + "-compressed" + outputExt,
       originalImageSize: file.size,
       compressedImageSize: finalSize,
-      fileType: file.type,
+      fileType: outputType,
       content: finalContent,
       compressionPercentage: rate.toFixed(2),
     });

@@ -23,6 +23,8 @@ const DropZone = ({ onFilesSelected, hasCompressedImages }: DropZoneProps) => {
     e.preventDefault();
     if (e.target.files) {
       const validFiles = filterValidFiles(e.target.files);
+      // Clear so picking the same file again (e.g. after Reset) still fires onChange.
+      e.target.value = "";
       if (validFiles.length === 0) {
         return;
       }
