@@ -1,4 +1,3 @@
-import { isTauriAndroid } from "@/lib/platform";
 import { ThemeToggle } from "./mode-toggle";
 
 const Header = () => {
@@ -29,7 +28,7 @@ const Header = () => {
               </span>
             </a>
           </div>
-          {!isTauriAndroid() && <ThemeToggle />}
+          <ThemeToggle />
         </div>
       </div>
     </header>
