@@ -27,7 +27,7 @@ const en = {
   "metadata.label": "Remove metadata",
   "metadata.hint":
     "Strips EXIF data such as GPS location, camera model and date taken. If unchecked, EXIF is kept for JPEG files only.",
-  "dropzone.idle": "Drag & drop images anywhere",
+  "dropzone.idle": "Drag & drop images anywhere or click here to browse",
   "dropzone.active": "Drop your images here",
   "dropzone.upload": "Upload image file",
   "actions.downloadAll": "Download All (ZIP)",
@@ -46,6 +46,8 @@ const en = {
   "footer.version": "Version {version}, view source on GitHub",
   "toast.invalidFile":
     "Invalid file! Please upload only JPG, JPEG, PNG, or WEBP files.",
+  "toast.tooManyFiles":
+    "Too many files: only the first {max} of {count} images were added.",
   "toast.noZip": "No zip file available.",
   "toast.zipDone": "ZIP downloaded successfully!",
   "toast.zipFailed": "Failed to download ZIP.",
@@ -82,7 +84,8 @@ const tr: Record<Key, string> = {
   "metadata.label": "Meta verileri kaldır",
   "metadata.hint":
     "GPS konumu, kamera modeli ve çekim tarihi gibi EXIF verilerini siler. İşaret kaldırılırsa EXIF yalnızca JPEG dosyalarında korunur.",
-  "dropzone.idle": "Görselleri herhangi bir yere sürükleyip bırakın",
+  "dropzone.idle":
+    "Görselleri herhangi bir yere sürükleyip bırakın veya dosya seçmek için buraya tıklayın",
   "dropzone.active": "Görselleri buraya bırakın",
   "dropzone.upload": "Görsel dosyası yükle",
   "actions.downloadAll": "Tümünü İndir (ZIP)",
@@ -101,6 +104,8 @@ const tr: Record<Key, string> = {
   "footer.version": "Sürüm {version}, kaynak kodu GitHub'da görüntüle",
   "toast.invalidFile":
     "Geçersiz dosya! Lütfen yalnızca JPG, JPEG, PNG veya WEBP dosyası yükleyin.",
+  "toast.tooManyFiles":
+    "Çok fazla dosya: {count} görselden yalnızca ilk {max} tanesi eklendi.",
   "toast.noZip": "ZIP dosyası hazır değil.",
   "toast.zipDone": "ZIP başarıyla indirildi!",
   "toast.zipFailed": "ZIP indirilemedi.",

@@ -9,6 +9,9 @@ export const ALLOWED_FORMATS = [
   "image/webp",
 ];
 
+// Maximum number of images per upload
+export const MAX_FILES = 1000;
+
 // Validate file type
 export const validateFileType = (file: File): boolean => {
   return ALLOWED_FORMATS.includes(file.type.toLowerCase());
@@ -36,6 +39,15 @@ export const filterValidFiles = (files: FileList | File[]): File[] => {
       duration: 5000,
       position: "top-right",
     });
+  }
+
+  // Every setting change reprocesses the whole batch in memory, so cap it.
+  if (validFiles.length > MAX_FILES) {
+    toast.warning(
+      t("toast.tooManyFiles", { max: MAX_FILES, count: validFiles.length }),
+      { duration: 5000, position: "top-right" }
+    );
+    return validFiles.slice(0, MAX_FILES);
   }
 
   return validFiles;
