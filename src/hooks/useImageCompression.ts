@@ -1,6 +1,6 @@
 import { filterValidFiles } from "@/lib/file-validation";
 import { processImages } from "@/lib/image-compression";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { CompressedImage } from "../types/image-compressor";
 
 export const useImageCompression = () => {
@@ -15,7 +15,8 @@ export const useImageCompression = () => {
   const [filelist, setFilelist] = useState<FileList | File[]>([]);
   const [compressProgress, setCompressProgress] = useState<number>(0);
 
-  const handleImageUpload = (files: FileList | File[]) => {
+  // Stable identity: DropZone subscribes window drop listeners with it.
+  const handleImageUpload = useCallback((files: FileList | File[]) => {
     const validFiles = filterValidFiles(files);
     if (validFiles.length === 0) {
       return;
@@ -23,7 +24,7 @@ export const useImageCompression = () => {
     setCompressedImages([]);
     setCompressProgress(0);
     setFilelist(validFiles);
-  };
+  }, []);
 
   const onImageQualityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setValue(parseInt(event.target.value, 10));

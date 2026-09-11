@@ -1,6 +1,9 @@
+import { useT } from "@/lib/i18n";
 import { version } from "../../package.json";
 
 const Footer = () => {
+  const t = useT();
+
   return (
     <footer className="bg-background text-foreground border-border w-full border-t">
       <div className="container mx-auto flex h-14 items-center justify-end px-4">
@@ -8,7 +11,7 @@ const Footer = () => {
           href="https://github.com/bugraceylan/image-compressor"
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={`Version ${version}, view source on GitHub`}
+          aria-label={t("footer.version", { version })}
           className="text-muted-foreground hover:text-foreground text-sm transition-colors"
         >
           v{version}

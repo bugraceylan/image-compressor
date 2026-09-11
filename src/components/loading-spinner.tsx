@@ -1,4 +1,8 @@
+import { formatPercent, useT } from "@/lib/i18n";
+
 const LoadingSpinner = ({ compressProgress }: { compressProgress: number }) => {
+  const t = useT();
+
   return (
     <div className="flex items-center gap-2.5 px-6 py-3">
       <div className="relative h-5 w-5 flex-shrink-0">
@@ -7,8 +11,8 @@ const LoadingSpinner = ({ compressProgress }: { compressProgress: number }) => {
       </div>
       <span className="text-muted-foreground text-base">
         {compressProgress === 100
-          ? "Compression complete"
-          : `Compressing... ${compressProgress}%`}
+          ? t("progress.done")
+          : t("progress.running", { value: formatPercent(compressProgress) })}
       </span>
     </div>
   );

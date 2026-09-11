@@ -1,8 +1,9 @@
 import { toast } from "sonner";
+import { t } from "./i18n";
 
 export const downloadZip = async (zipFile: Blob | null) => {
   if (!zipFile) {
-    toast.error("No zip file available.");
+    toast.error(t("toast.noZip"));
     return;
   }
 
@@ -13,10 +14,10 @@ export const downloadZip = async (zipFile: Blob | null) => {
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
-    toast.success("ZIP downloaded successfully!");
+    toast.success(t("toast.zipDone"));
   } catch (err) {
     console.error(err);
-    toast.error("Failed to download ZIP.");
+    toast.error(t("toast.zipFailed"));
   }
 };
 
@@ -37,9 +38,9 @@ export const downloadSingleImage = async (file: string, fileName?: string) => {
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
-    toast.success("Image downloaded successfully!");
+    toast.success(t("toast.imageDone"));
   } catch (err) {
     console.error(err);
-    toast.error("Failed to download image.");
+    toast.error(t("toast.imageFailed"));
   }
 };

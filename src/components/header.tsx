@@ -1,3 +1,4 @@
+import { LanguageToggle } from "./language-toggle";
 import { ThemeToggle } from "./mode-toggle";
 
 const Header = () => {
@@ -28,7 +29,10 @@ const Header = () => {
               </span>
             </a>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <LanguageToggle />
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </header>

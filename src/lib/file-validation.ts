@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { t } from "./i18n";
 
 // Allowed image formats
 export const ALLOWED_FORMATS = [
@@ -30,14 +31,11 @@ export const filterValidFiles = (files: FileList | File[]): File[] => {
   // Show error toast for invalid files
   if (invalidFiles.length > 0) {
     const invalidFileNames = invalidFiles.map((file) => file.name).join(", ");
-    toast.error(
-      `Invalid file! Please upload only JPG, JPEG, PNG, or WEBP files.`,
-      {
-        description: invalidFileNames,
-        duration: 5000,
-        position: "top-right",
-      }
-    );
+    toast.error(t("toast.invalidFile"), {
+      description: invalidFileNames,
+      duration: 5000,
+      position: "top-right",
+    });
   }
 
   return validFiles;

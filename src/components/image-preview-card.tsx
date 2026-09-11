@@ -1,3 +1,4 @@
+import { formatPercent, useT } from "@/lib/i18n";
 import { formatBytes } from "@/lib/utils";
 import { DownloadIcon, Eye, MoveRight } from "lucide-react";
 import { memo } from "react";
@@ -17,6 +18,9 @@ const ImagePreviewCard = memo(
     compressedImageSize: number;
     compressionPercentage: string;
   }) => {
+    // Subscribes this memoized card to language changes (number formatting).
+    const t = useT();
+
     return (
       <div className="bg-background flex items-center justify-between gap-2 rounded-lg border p-2 pe-3 will-change-transform">
         <div className="flex items-center gap-3 overflow-hidden">
@@ -44,7 +48,7 @@ const ImagePreviewCard = memo(
               <span className="text-success">
                 {formatBytes(props?.compressedImageSize)}{" "}
                 <span className="inline-flex">
-                  ({props?.compressionPercentage}%)
+                  ({formatPercent(Number(props?.compressionPercentage), 2)})
                 </span>
               </span>
             </span>
@@ -53,6 +57,7 @@ const ImagePreviewCard = memo(
         <Button
           size="icon"
           variant="ghost"
+          aria-label={t("results.download", { name: props?.fileName })}
           className="text-muted-foreground/80 hover:text-foreground -me-2 size-8 hover:bg-transparent"
           onClick={() => onSingleFileDownload(props?.content, props?.fileName)}
         >

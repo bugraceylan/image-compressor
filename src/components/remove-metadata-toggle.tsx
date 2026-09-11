@@ -1,3 +1,5 @@
+import { useT } from "@/lib/i18n";
+
 const RemoveMetadataToggle = ({
   checked,
   onStripMetadataChange,
@@ -5,6 +7,8 @@ const RemoveMetadataToggle = ({
   checked: boolean;
   onStripMetadataChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }) => {
+  const t = useT();
+
   return (
     <div className="animate-fadeIn animate-delay-150 mb-4 w-full">
       <label className="flex cursor-pointer items-start gap-2">
@@ -15,10 +19,9 @@ const RemoveMetadataToggle = ({
           onChange={onStripMetadataChange}
         />
         <span>
-          <span className="text-base font-bold">Remove metadata</span>
+          <span className="text-base font-bold">{t("metadata.label")}</span>
           <span className="text-muted-foreground block text-sm">
-            Strips EXIF data such as GPS location, camera model and date taken.
-            If unchecked, EXIF is kept for JPEG files only.
+            {t("metadata.hint")}
           </span>
         </span>
       </label>
