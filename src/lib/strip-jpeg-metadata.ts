@@ -7,17 +7,58 @@ const KEPT_APP_MARKERS = [0xe0, 0xee];
 const ascii = (b: Uint8Array, start: number, length: number) =>
   String.fromCharCode(...b.subarray(start, start + length));
 
-const readOrientation = (b: Uint8Array, tiff: number, end: number) => {
-  if (tiff + 8 > end) return 1;
+// Position of the Orientation value inside an EXIF block starting at `tiff`.
+const orientationEntry = (b: Uint8Array, tiff: number, end: number) => {
+  if (tiff + 8 > end) return null;
   const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
   const le = b[tiff] === 0x49; // "II" = little-endian
   const ifd = tiff + view.getUint32(tiff + 4, le);
-  if (ifd + 2 > end) return 1;
+  if (ifd + 2 > end) return null;
   const entriesEnd = Math.min(ifd + 2 + view.getUint16(ifd, le) * 12, end);
   for (let e = ifd + 2; e + 12 <= entriesEnd; e += 12) {
-    if (view.getUint16(e, le) === 0x0112) return view.getUint16(e + 8, le);
+    if (view.getUint16(e, le) === 0x0112) return { pos: e + 8, le };
   }
-  return 1;
+  return null;
+};
+
+const readOrientation = (b: Uint8Array, tiff: number, end: number) => {
+  const entry = orientationEntry(b, tiff, end);
+  return entry
+    ? new DataView(b.buffer, b.byteOffset, b.byteLength).getUint16(
+        entry.pos,
+        entry.le
+      )
+    : 1;
+};
+
+/**
+ * Returns a copy of the JPEG with EXIF orientation set to 1 (pixels as stored),
+ * or the input itself when there is nothing to reset. Office ignores orientation,
+ * so pictures taken from documents must be decoded without it.
+ */
+export const resetJpegOrientation = (b: Uint8Array): Uint8Array => {
+  if (b[0] !== 0xff || b[1] !== 0xd8) return b;
+  let i = 2;
+  while (i + 4 <= b.length && b[i] === 0xff) {
+    const marker = b[i + 1];
+    if (marker === 0xff) {
+      i++; // fill byte
+      continue;
+    }
+    if (marker === 0xda || marker === 0xd9) break; // image data: no EXIF ahead
+    const end = i + 2 + ((b[i + 2] << 8) | b[i + 3]);
+    if (end > b.length) break;
+    if (marker === 0xe1 && ascii(b, i + 4, 6) === "Exif\0\0") {
+      const entry = orientationEntry(b, i + 10, end);
+      const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
+      if (!entry || view.getUint16(entry.pos, entry.le) === 1) return b;
+      const copy = b.slice();
+      new DataView(copy.buffer).setUint16(entry.pos, 1, entry.le);
+      return copy;
+    }
+    i = end;
+  }
+  return b;
 };
 
 // Minimal big-endian EXIF block holding only the Orientation tag, so rotated photos

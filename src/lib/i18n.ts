@@ -27,17 +27,22 @@ const en = {
   "metadata.label": "Remove metadata",
   "metadata.hint":
     "Strips EXIF data such as GPS location, camera model and date taken. If unchecked, EXIF is kept for JPEG files only.",
-  "dropzone.idle": "Drag & drop images anywhere or click here to browse",
-  "dropzone.active": "Drop your images here",
-  "dropzone.upload": "Upload image file",
+  "dropzone.idle":
+    "Drag & drop images or Office files anywhere or click here to browse",
+  "dropzone.active": "Drop your files here",
+  "dropzone.upload": "Upload files",
   "actions.downloadAll": "Download All (ZIP)",
   "actions.reset": "Reset",
-  "results.emptyTitle": "No Compressed Images",
+  "results.emptyTitle": "No Compressed Files",
   "results.emptyText":
-    "Upload images and compress them to see your results here. Your compressed images will appear in this section.",
+    "Upload images or Word, Excel and PowerPoint files to see your results here.",
   "results.download": "Download {name}",
-  "summary.totalOriginal": "Total original ({count} images)",
-  "summary.totalOriginalOne": "Total original (1 image)",
+  "document.images": "{done} of {total} images compressed",
+  "document.noImages": "No compressible images found",
+  "document.signed": "Digitally signed, left unchanged",
+  "document.unreadable": "Could not be opened: password-protected or damaged",
+  "summary.totalOriginal": "Total original ({count} files)",
+  "summary.totalOriginalOne": "Total original (1 file)",
   "summary.saved": "Saved",
   "summary.increase": "Size increase",
   "summary.final": "Final size",
@@ -45,14 +50,14 @@ const en = {
   "progress.running": "Compressing... {value}",
   "footer.version": "Version {version}, view source on GitHub",
   "toast.invalidFile":
-    "Invalid file! Please upload only JPG, JPEG, PNG, or WEBP files.",
+    "Invalid file! Please upload only JPG, PNG, WEBP images or DOCX, XLSX, PPTX files.",
   "toast.tooManyFiles":
-    "Too many files: only the first {max} of {count} images were added.",
+    "Too many files: only the first {max} of {count} files were added.",
   "toast.noZip": "No zip file available.",
   "toast.zipDone": "ZIP downloaded successfully!",
   "toast.zipFailed": "Failed to download ZIP.",
-  "toast.imageDone": "Image downloaded successfully!",
-  "toast.imageFailed": "Failed to download image.",
+  "toast.imageDone": "File downloaded successfully!",
+  "toast.imageFailed": "Failed to download file.",
 };
 
 type Key = keyof typeof en;
@@ -85,17 +90,21 @@ const tr: Record<Key, string> = {
   "metadata.hint":
     "GPS konumu, kamera modeli ve çekim tarihi gibi EXIF verilerini siler. İşaret kaldırılırsa EXIF yalnızca JPEG dosyalarında korunur.",
   "dropzone.idle":
-    "Görselleri herhangi bir yere sürükleyip bırakın veya dosya seçmek için buraya tıklayın",
-  "dropzone.active": "Görselleri buraya bırakın",
-  "dropzone.upload": "Görsel dosyası yükle",
+    "Görselleri veya Office dosyalarını herhangi bir yere sürükleyip bırakın ya da seçmek için buraya tıklayın",
+  "dropzone.active": "Dosyaları buraya bırakın",
+  "dropzone.upload": "Dosya yükle",
   "actions.downloadAll": "Tümünü İndir (ZIP)",
   "actions.reset": "Sıfırla",
-  "results.emptyTitle": "Sıkıştırılmış Görsel Yok",
+  "results.emptyTitle": "Sıkıştırılmış Dosya Yok",
   "results.emptyText":
-    "Sonuçları burada görmek için görsel yükleyip sıkıştırın. Sıkıştırılan görseller bu bölümde görünecek.",
+    "Sonuçları burada görmek için görsel ya da Word, Excel ve PowerPoint dosyası yükleyin.",
   "results.download": "{name} dosyasını indir",
-  "summary.totalOriginal": "Toplam orijinal ({count} görsel)",
-  "summary.totalOriginalOne": "Toplam orijinal (1 görsel)",
+  "document.images": "{total} görselden {done} tanesi sıkıştırıldı",
+  "document.noImages": "Sıkıştırılabilir görsel bulunamadı",
+  "document.signed": "Dijital imzalı, değiştirilmedi",
+  "document.unreadable": "Açılamadı: parola korumalı ya da bozuk",
+  "summary.totalOriginal": "Toplam orijinal ({count} dosya)",
+  "summary.totalOriginalOne": "Toplam orijinal (1 dosya)",
   "summary.saved": "Tasarruf",
   "summary.increase": "Boyut artışı",
   "summary.final": "Son boyut",
@@ -103,14 +112,14 @@ const tr: Record<Key, string> = {
   "progress.running": "Sıkıştırılıyor... {value}",
   "footer.version": "Sürüm {version}, kaynak kodu GitHub'da görüntüle",
   "toast.invalidFile":
-    "Geçersiz dosya! Lütfen yalnızca JPG, JPEG, PNG veya WEBP dosyası yükleyin.",
+    "Geçersiz dosya! Lütfen yalnızca JPG, PNG, WEBP görselleri ya da DOCX, XLSX, PPTX dosyaları yükleyin.",
   "toast.tooManyFiles":
-    "Çok fazla dosya: {count} görselden yalnızca ilk {max} tanesi eklendi.",
+    "Çok fazla dosya: {count} dosyadan yalnızca ilk {max} tanesi eklendi.",
   "toast.noZip": "ZIP dosyası hazır değil.",
   "toast.zipDone": "ZIP başarıyla indirildi!",
   "toast.zipFailed": "ZIP indirilemedi.",
-  "toast.imageDone": "Görsel başarıyla indirildi!",
-  "toast.imageFailed": "Görsel indirilemedi.",
+  "toast.imageDone": "Dosya başarıyla indirildi!",
+  "toast.imageFailed": "Dosya indirilemedi.",
 };
 
 export type Lang = "en" | "tr";

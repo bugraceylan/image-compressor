@@ -1,6 +1,7 @@
 import Compressor from "compressorjs";
 import JSZip from "jszip";
 import type { CompressedImage } from "../types/image-compressor";
+import { compressOfficeFile, isOfficeFile } from "./office-compression";
 import { stripJpegMetadata } from "./strip-jpeg-metadata";
 
 export const compressImage = async (
@@ -40,7 +41,7 @@ export const compressImage = async (
       // Canvas re-encoding drops all metadata; retainExif copies EXIF back (JPEG only).
       retainExif: !stripMetadata,
       // strict would hand back the original file (metadata included) when the result
-      // is larger; processImages applies its own size fallback instead.
+      // is larger; optimizeImage applies its own size fallback instead.
       strict: false,
       success(result: Blob) {
         // compressorjs also returns the original file when canvas encoding fails.
@@ -63,6 +64,53 @@ export const compressImage = async (
   });
 };
 
+const readAsDataUrl = (blob: Blob) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+  });
+
+// Compresses one image and picks the smallest acceptable output.
+export const optimizeImage = async (
+  file: File,
+  quality: number,
+  scale: number,
+  stripMetadata: boolean
+): Promise<{ dataUrl: string; size: number; type: string }> => {
+  const compressedImg = await compressImage(
+    file,
+    quality,
+    scale,
+    stripMetadata
+  );
+  const compressedImageSize = atob(compressedImg.split(",")[1]).length;
+
+  // Re-encoding can make a file larger (e.g. an already-lossy image). At 100% resolution
+  // fall back to the original, or when removing metadata to a losslessly cleaned JPEG
+  // (PNG/WebP can only be cleaned by re-encoding). Resizing always keeps the re-encode.
+  let fallback: Blob | null = null;
+  if (scale === 100 && !stripMetadata) {
+    fallback = file;
+  } else if (scale === 100 && file.type === "image/jpeg") {
+    fallback = stripJpegMetadata(new Uint8Array(await file.arrayBuffer()));
+  }
+
+  if (fallback && compressedImageSize >= fallback.size) {
+    return {
+      dataUrl: await readAsDataUrl(fallback),
+      size: fallback.size,
+      type: file.type,
+    };
+  }
+  return {
+    dataUrl: compressedImg,
+    size: compressedImageSize,
+    type: compressedImg.slice(5, compressedImg.indexOf(";")),
+  };
+};
+
 export const processImages = async (
   files: File[],
   quality: number,
@@ -78,73 +126,63 @@ export const processImages = async (
 
   for (const file of files) {
     signal?.throwIfAborted();
-    const compressedImg = await compressImage(
-      file,
-      quality,
-      scale,
-      stripMetadata
-    );
-    const base64Data = (compressedImg as string).split(",")[1];
-    const binaryData = atob(base64Data);
-    const compressedImageSize = binaryData.length;
     const dotIndex = file.name.lastIndexOf(".");
     const baseName = dotIndex !== -1 ? file.name.slice(0, dotIndex) : file.name;
     const originalExt = dotIndex !== -1 ? file.name.slice(dotIndex) : "";
+    const rateOf = (size: number) =>
+      (((size - file.size) / file.size) * 100).toFixed(2);
 
-    // Re-encoding can make a file larger (e.g. an already-lossy image). At 100% resolution
-    // fall back to the original, or when removing metadata to a losslessly cleaned JPEG
-    // (PNG/WebP can only be cleaned by re-encoding). Resizing always keeps the re-encode.
-    let fallback: Blob | null = null;
-    if (scale === 100 && !stripMetadata) {
-      fallback = file;
-    } else if (scale === 100 && file.type === "image/jpeg") {
-      fallback = stripJpegMetadata(new Uint8Array(await file.arrayBuffer()));
-    }
-    const useFallback =
-      fallback !== null && compressedImageSize >= fallback.size;
-
-    // PNG is re-encoded as JPEG, so the extension must follow the actual output type.
-    const outputType = useFallback
-      ? file.type
-      : compressedImg.slice(5, compressedImg.indexOf(";"));
-    const outputExt =
-      outputType === file.type
-        ? originalExt
-        : "." + outputType.split("/")[1].replace("jpeg", "jpg");
-
-    let finalContent: string;
-    let finalSize: number;
-
-    if (fallback && useFallback) {
-      const source = fallback;
-      finalContent = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(source);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
+    if (isOfficeFile(file)) {
+      const doc = await compressOfficeFile(file, async (image) => {
+        signal?.throwIfAborted();
+        const result = await optimizeImage(
+          image,
+          quality,
+          scale,
+          stripMetadata
+        );
+        return {
+          blob: await (await fetch(result.dataUrl)).blob(),
+          type: result.type,
+        };
       });
-      finalSize = fallback.size;
+      const fileName = baseName + "-compressed" + originalExt;
+      compressedImgs.push({
+        fileName,
+        originalImageSize: file.size,
+        compressedImageSize: doc.blob.size,
+        fileType: doc.blob.type || file.type,
+        content: await readAsDataUrl(doc.blob),
+        compressionPercentage: rateOf(doc.blob.size),
+        kind: "document",
+        imagesTotal: doc.imagesTotal,
+        imagesCompressed: doc.imagesCompressed,
+        note: doc.note,
+      });
+      if (doc.note !== "unreadable") img?.file(fileName, doc.blob);
     } else {
-      finalContent = compressedImg as string;
-      finalSize = compressedImageSize;
+      const result = await optimizeImage(file, quality, scale, stripMetadata);
+      // PNG is re-encoded as JPEG, so the extension must follow the actual output type.
+      const outputExt =
+        result.type === file.type
+          ? originalExt
+          : "." + result.type.split("/")[1].replace("jpeg", "jpg");
+
+      compressedImgs.push({
+        fileName: baseName + "-compressed" + outputExt,
+        originalImageSize: file.size,
+        compressedImageSize: result.size,
+        fileType: result.type,
+        content: result.dataUrl,
+        compressionPercentage: rateOf(result.size),
+        kind: "image",
+      });
+
+      const blob = await (await fetch(result.dataUrl)).blob();
+      img?.file(`${baseName}-compressed${outputExt}`, blob);
     }
 
-    const rate = ((finalSize - file.size) / file.size) * 100;
-
-    compressedImgs.push({
-      fileName: baseName + "-compressed" + outputExt,
-      originalImageSize: file.size,
-      compressedImageSize: finalSize,
-      fileType: outputType,
-      content: finalContent,
-      compressionPercentage: rate.toFixed(2),
-    });
-
-    const response = await fetch(finalContent);
-    const blob = await response.blob();
-    img?.file(`${baseName}-compressed${outputExt}`, blob);
     counter = counter - 1;
-
     const progress = Math.floor(
       ((files.length - counter) / files.length) * 100
     );

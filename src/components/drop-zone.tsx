@@ -103,7 +103,7 @@ const DropZone = ({ onFilesSelected, hasCompressedImages }: DropZoneProps) => {
       <input
         multiple
         type="file"
-        accept="image/jpeg,image/jpg,image/png,image/webp"
+        accept="image/jpeg,image/jpg,image/png,image/webp,.docx,.xlsx,.pptx"
         onChange={handleImageUpload}
         style={{ display: "none" }}
         id="file-input"
@@ -117,7 +117,9 @@ const DropZone = ({ onFilesSelected, hasCompressedImages }: DropZoneProps) => {
         <p className="mb-1 text-base font-medium">
           {highlighted ? t("dropzone.active") : t("dropzone.idle")}
         </p>
-        <p className="text-muted-foreground text-sm">JPG, JPEG, PNG, WEBP</p>
+        <p className="text-muted-foreground text-sm">
+          JPG, PNG, WEBP, DOCX, XLSX, PPTX
+        </p>
       </div>
     </label>
   );

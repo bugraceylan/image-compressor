@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import { t } from "./i18n";
+import { isOfficeFile } from "./office-compression";
 
 // Allowed image formats
 export const ALLOWED_FORMATS = [
@@ -9,12 +10,15 @@ export const ALLOWED_FORMATS = [
   "image/webp",
 ];
 
-// Maximum number of images per upload
+// Maximum number of files per upload
 export const MAX_FILES = 1000;
 
-// Validate file type
+// Validate file type: images by MIME type, Office files by extension
+// (browsers often report an empty or vendor-specific type for them).
 export const validateFileType = (file: File): boolean => {
-  return ALLOWED_FORMATS.includes(file.type.toLowerCase());
+  return (
+    ALLOWED_FORMATS.includes(file.type.toLowerCase()) || isOfficeFile(file)
+  );
 };
 
 // Filter valid files and show error for invalid ones

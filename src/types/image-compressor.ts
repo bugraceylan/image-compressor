@@ -5,6 +5,11 @@ export interface CompressedImage {
   fileType: string;
   content: string;
   compressionPercentage: string;
+  // Word, Excel and PowerPoint results
+  kind?: "image" | "document";
+  imagesTotal?: number;
+  imagesCompressed?: number;
+  note?: "signed" | "unreadable";
 }
 
 export interface ImageCompressorState {

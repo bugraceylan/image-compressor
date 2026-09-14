@@ -9,6 +9,7 @@ Browser-based image compressor. Images are processed locally in the browser; not
 - Optional resolution scaling from 10% to 100% of the original dimensions
 - Removes metadata (EXIF: GPS location, camera model, date taken) by default; EXIF can be kept for JPEG
 - At 100% resolution, output is never larger than needed: it falls back to the original file, or, when removing metadata from a JPEG, to a losslessly cleaned copy of it
+- Word, Excel and PowerPoint (DOCX, XLSX, PPTX): pictures inside the document are compressed with the same settings (PNG becomes JPG, links are updated) and a smaller document is returned; password-protected files cannot be opened and digitally signed files are left unchanged
 - Batch processing with single-file or ZIP download
 
 ## Development
