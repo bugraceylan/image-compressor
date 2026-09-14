@@ -8,7 +8,7 @@ const en = {
   "language.toggle": "Change language",
   "intro.title": "Free & Open Source Image and Document Compressor",
   "intro.subtitle":
-    "Shrink images and the pictures inside Word, Excel and PowerPoint files instantly and securely, right on your device. No uploads, no limits, no APIs. Works offline and keeps your files private.",
+    "Shrink images and the pictures inside Word, Excel, PowerPoint and PDF files instantly and securely, right on your device. No uploads, no limits, no APIs. Works offline and keeps your files private.",
   "quality.label": "Image Quality: {value}",
   "quality.hint": "Higher quality = larger file size",
   "quality.recommended": "Recommended",
@@ -28,14 +28,14 @@ const en = {
   "metadata.hint":
     "Strips EXIF data such as GPS location, camera model and date taken. If unchecked, EXIF is kept for JPEG files only.",
   "dropzone.idle":
-    "Drag & drop images or Office files anywhere or click here to browse",
+    "Drag & drop images, Office or PDF files anywhere or click here to browse",
   "dropzone.active": "Drop your files here",
   "dropzone.upload": "Upload files",
   "actions.downloadAll": "Download All (ZIP)",
   "actions.reset": "Reset",
   "results.emptyTitle": "No Compressed Files",
   "results.emptyText":
-    "Upload images or Word, Excel and PowerPoint files to see your results here.",
+    "Upload images or Word, Excel, PowerPoint and PDF files to see your results here.",
   "results.download": "Download {name}",
   "document.images": "{done} of {total} images compressed",
   "document.noImages": "No compressible images found",
@@ -50,7 +50,7 @@ const en = {
   "progress.running": "Compressing... {value}",
   "footer.version": "Version {version}, view source on GitHub",
   "toast.invalidFile":
-    "Invalid file! Please upload only JPG, PNG, WEBP images or DOCX, XLSX, PPTX files.",
+    "Invalid file! Please upload only JPG, PNG, WEBP images or DOCX, XLSX, PPTX, PDF files.",
   "toast.tooManyFiles":
     "Too many files: only the first {max} of {count} files were added.",
   "toast.noZip": "No zip file available.",
@@ -70,7 +70,7 @@ const tr: Record<Key, string> = {
   "language.toggle": "Dili değiştir",
   "intro.title": "Ücretsiz ve Açık Kaynak Görsel ve Belge Sıkıştırıcı",
   "intro.subtitle":
-    "Görselleri ve Word, Excel, PowerPoint dosyalarındaki resimleri anında ve güvenle, doğrudan cihazınızda küçültün. Yükleme yok, sınır yok, API yok. Çevrimdışı çalışır ve dosyalarınızı gizli tutar.",
+    "Görselleri ve Word, Excel, PowerPoint, PDF dosyalarındaki resimleri anında ve güvenle, doğrudan cihazınızda küçültün. Yükleme yok, sınır yok, API yok. Çevrimdışı çalışır ve dosyalarınızı gizli tutar.",
   "quality.label": "Görsel Kalitesi: {value}",
   "quality.hint": "Daha yüksek kalite = daha büyük dosya",
   "quality.recommended": "Önerilen",
@@ -90,14 +90,14 @@ const tr: Record<Key, string> = {
   "metadata.hint":
     "GPS konumu, kamera modeli ve çekim tarihi gibi EXIF verilerini siler. İşaret kaldırılırsa EXIF yalnızca JPEG dosyalarında korunur.",
   "dropzone.idle":
-    "Görselleri veya Office dosyalarını herhangi bir yere sürükleyip bırakın ya da seçmek için buraya tıklayın",
+    "Görselleri, Office veya PDF dosyalarını herhangi bir yere sürükleyip bırakın ya da seçmek için buraya tıklayın",
   "dropzone.active": "Dosyaları buraya bırakın",
   "dropzone.upload": "Dosya yükle",
   "actions.downloadAll": "Tümünü İndir (ZIP)",
   "actions.reset": "Sıfırla",
   "results.emptyTitle": "Sıkıştırılmış Dosya Yok",
   "results.emptyText":
-    "Sonuçları burada görmek için görsel ya da Word, Excel ve PowerPoint dosyası yükleyin.",
+    "Sonuçları burada görmek için görsel ya da Word, Excel, PowerPoint veya PDF dosyası yükleyin.",
   "results.download": "{name} dosyasını indir",
   "document.images": "{total} görselden {done} tanesi sıkıştırıldı",
   "document.noImages": "Sıkıştırılabilir görsel bulunamadı",
@@ -112,7 +112,7 @@ const tr: Record<Key, string> = {
   "progress.running": "Sıkıştırılıyor... {value}",
   "footer.version": "Sürüm {version}, kaynak kodu GitHub'da görüntüle",
   "toast.invalidFile":
-    "Geçersiz dosya! Lütfen yalnızca JPG, PNG, WEBP görselleri ya da DOCX, XLSX, PPTX dosyaları yükleyin.",
+    "Geçersiz dosya! Lütfen yalnızca JPG, PNG, WEBP görselleri ya da DOCX, XLSX, PPTX, PDF dosyaları yükleyin.",
   "toast.tooManyFiles":
     "Çok fazla dosya: {count} dosyadan yalnızca ilk {max} tanesi eklendi.",
   "toast.noZip": "ZIP dosyası hazır değil.",

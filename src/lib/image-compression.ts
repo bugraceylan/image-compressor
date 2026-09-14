@@ -2,6 +2,7 @@ import Compressor from "compressorjs";
 import JSZip from "jszip";
 import type { CompressedImage } from "../types/image-compressor";
 import { compressOfficeFile, isOfficeFile } from "./office-compression";
+import { compressPdfFile, isPdfFile } from "./pdf-compression";
 import { stripJpegMetadata } from "./strip-jpeg-metadata";
 
 export const compressImage = async (
@@ -124,6 +125,15 @@ export const processImages = async (
   const img = zip.folder("compressed_images");
   let counter = files.length;
 
+  const optimizeToBlob = async (image: File) => {
+    signal?.throwIfAborted();
+    const result = await optimizeImage(image, quality, scale, stripMetadata);
+    return {
+      blob: await (await fetch(result.dataUrl)).blob(),
+      type: result.type,
+    };
+  };
+
   for (const file of files) {
     signal?.throwIfAborted();
     const dotIndex = file.name.lastIndexOf(".");
@@ -132,20 +142,15 @@ export const processImages = async (
     const rateOf = (size: number) =>
       (((size - file.size) / file.size) * 100).toFixed(2);
 
-    if (isOfficeFile(file)) {
-      const doc = await compressOfficeFile(file, async (image) => {
-        signal?.throwIfAborted();
-        const result = await optimizeImage(
-          image,
-          quality,
-          scale,
-          stripMetadata
-        );
-        return {
-          blob: await (await fetch(result.dataUrl)).blob(),
-          type: result.type,
-        };
-      });
+    if (isOfficeFile(file) || isPdfFile(file)) {
+      const doc = isPdfFile(file)
+        ? await compressPdfFile(
+            file,
+            quality,
+            async (image) => (await optimizeToBlob(image)).blob,
+            signal
+          )
+        : await compressOfficeFile(file, optimizeToBlob);
       const fileName = baseName + "-compressed" + originalExt;
       compressedImgs.push({
         fileName,

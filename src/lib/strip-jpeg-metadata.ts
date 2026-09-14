@@ -141,3 +141,27 @@ export const stripJpegMetadata = (b: Uint8Array): Blob | null => {
   }
   return null; // no EOI
 };
+
+/** Pixel size and component count from the JPEG frame header, or null. */
+export const readJpegSize = (b: Uint8Array) => {
+  if (b[0] !== 0xff || b[1] !== 0xd8) return null;
+  let i = 2;
+  while (i + 9 < b.length && b[i] === 0xff) {
+    const marker = b[i + 1];
+    if (marker === 0xff) {
+      i++; // fill byte
+      continue;
+    }
+    const isFrame =
+      marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker);
+    if (isFrame) {
+      return {
+        height: (b[i + 5] << 8) | b[i + 6],
+        width: (b[i + 7] << 8) | b[i + 8],
+        components: b[i + 9],
+      };
+    }
+    i += 2 + ((b[i + 2] << 8) | b[i + 3]);
+  }
+  return null;
+};

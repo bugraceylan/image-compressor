@@ -1,16 +1,21 @@
 # The Compressor
 
-Browser-based compressor for images and for the pictures inside Word, Excel and PowerPoint files. Everything is processed locally in the browser; nothing is uploaded.
+Browser-based compressor for images and for the pictures inside Word, Excel, PowerPoint and PDF files. Everything is processed locally in the browser; nothing is uploaded.
+
+Live: https://bugraceylan.github.io/image-compressor/
 
 ## Features
 
-- JPG, PNG and WebP input
+- Input: JPG, PNG and WebP images, Word, Excel and PowerPoint files (DOCX, XLSX, PPTX) and PDF
 - Adjustable quality; PNG is re-encoded as JPG (transparent areas become white) so results open in Office and Outlook, JPG and WebP keep their format
 - Optional resolution scaling from 10% to 100% of the original dimensions
 - Removes metadata (EXIF: GPS location, camera model, date taken) by default; EXIF can be kept for JPEG
 - At 100% resolution, output is never larger than needed: it falls back to the original file, or, when removing metadata from a JPEG, to a losslessly cleaned copy of it
-- Word, Excel and PowerPoint (DOCX, XLSX, PPTX): pictures inside the document are compressed with the same settings (PNG becomes JPG, links are updated) and a smaller document is returned; password-protected files cannot be opened and digitally signed files are left unchanged
-- Batch processing with single-file or ZIP download
+- Word, Excel and PowerPoint: pictures inside the document are compressed with the same settings (PNG becomes JPG, links are updated) and a smaller document is returned; all other content stays byte-identical
+- PDF (typically exported from Office): photos are recompressed with the quality and resolution settings; screenshots, charts and logos are only re-encoded at full resolution so their text stays sharp; text, vector graphics and fonts are untouched
+- Documents are only replaced when the result is smaller; password-protected files are reported as unreadable and digitally signed files are left unchanged
+- Drag and drop anywhere on the page, up to 1000 files per batch, single-file or ZIP download, total size summary
+- English and Turkish interface (follows the browser language, switchable in the header)
 
 ## Development
 
@@ -23,9 +28,26 @@ npm run build    # production build in dist/
 npm run lint
 ```
 
+## Deployment
+
+Pushing a version tag runs `.github/workflows/release.yml`:
+
+```bash
+git tag v1.2.3 && git push origin v1.2.3
+```
+
+- The Docker image is published to `ghcr.io/bugraceylan/image-compressor:<version>` and `:latest` (nginx, port 8080)
+- The site is deployed to GitHub Pages: https://bugraceylan.github.io/image-compressor/
+
+Run the image locally:
+
+```bash
+docker run -d -p 8080:8080 ghcr.io/bugraceylan/image-compressor:latest
+```
+
 ## Stack
 
-React 19, TypeScript, Vite, Tailwind CSS, shadcn/ui, compressorjs, JSZip.
+React 19, TypeScript, Vite, Tailwind CSS, shadcn/ui, compressorjs, JSZip, @cantoo/pdf-lib (loaded only when a PDF is added).
 
 ## Credits
 
