@@ -1,6 +1,6 @@
 # The Compressor
 
-Browser-based image compressor. Images are processed locally in the browser; nothing is uploaded.
+Browser-based compressor for images and for the pictures inside Word, Excel and PowerPoint files. Everything is processed locally in the browser; nothing is uploaded.
 
 ## Features
 

@@ -6,9 +6,9 @@ const en = {
   "theme.dark": "Dark",
   "theme.system": "System",
   "language.toggle": "Change language",
-  "intro.title": "Free & Open Source Image Compressor",
+  "intro.title": "Free & Open Source Image and Document Compressor",
   "intro.subtitle":
-    "Compress images instantly and securely, right on your device. No uploads, no limits, no APIs. Works offline and keeps your files private.",
+    "Shrink images and the pictures inside Word, Excel and PowerPoint files instantly and securely, right on your device. No uploads, no limits, no APIs. Works offline and keeps your files private.",
   "quality.label": "Image Quality: {value}",
   "quality.hint": "Higher quality = larger file size",
   "quality.recommended": "Recommended",
@@ -68,9 +68,9 @@ const tr: Record<Key, string> = {
   "theme.dark": "Koyu",
   "theme.system": "Sistem",
   "language.toggle": "Dili değiştir",
-  "intro.title": "Ücretsiz ve Açık Kaynak Görsel Sıkıştırıcı",
+  "intro.title": "Ücretsiz ve Açık Kaynak Görsel ve Belge Sıkıştırıcı",
   "intro.subtitle":
-    "Görsellerinizi anında ve güvenle, doğrudan cihazınızda sıkıştırın. Yükleme yok, sınır yok, API yok. Çevrimdışı çalışır ve dosyalarınızı gizli tutar.",
+    "Görselleri ve Word, Excel, PowerPoint dosyalarındaki resimleri anında ve güvenle, doğrudan cihazınızda küçültün. Yükleme yok, sınır yok, API yok. Çevrimdışı çalışır ve dosyalarınızı gizli tutar.",
   "quality.label": "Görsel Kalitesi: {value}",
   "quality.hint": "Daha yüksek kalite = daha büyük dosya",
   "quality.recommended": "Önerilen",
