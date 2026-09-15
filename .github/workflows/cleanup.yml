@@ -1,0 +1,56 @@
+# Keeps only the three newest releases on GitHub. After each successful release,
+# older v* tags and every image version not tagged with one of those releases are
+# deleted. Run it by hand with dry-run to see what would go.
+# The images are single-platform manifests (no index or attestations), so an
+# untagged version is never part of a kept image.
+name: cleanup
+
+on:
+  workflow_run:
+    workflows: [release]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: List what would be deleted without deleting
+        type: boolean
+        default: true
+
+jobs:
+  cleanup:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      KEEP: 3
+      DRY_RUN: ${{ inputs.dry-run || false }}
+      PACKAGE: users/${{ github.repository_owner }}/packages/container/image-compressor
+    steps:
+      - name: Delete old tags and images
+        run: |
+          set -euo pipefail
+          delete() {
+            if [ "$DRY_RUN" = true ]; then echo "Would delete $2"
+            else gh api -X DELETE "$1" > /dev/null && echo "Deleted $2"; fi
+          }
+
+          tags=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/v" --jq '.[].ref | ltrimstr("refs/tags/")' | sort -V)
+          keep=$(tail -n "$KEEP" <<< "$tags")
+          # Without tags every image would look old.
+          [ -n "$keep" ] || { echo "No v* tags found"; exit 1; }
+          echo "Keeping:" $keep
+
+          for tag in $(head -n -"$KEEP" <<< "$tags"); do
+            delete "repos/$GITHUB_REPOSITORY/git/refs/tags/$tag" "tag $tag"
+          done
+
+          # Image tags have no "v" prefix: v1.2.3 -> 1.2.3
+          keep_json=$(sed 's/^v//; s/.*/"&"/' <<< "$keep" | paste -sd, -)
+          gh api --paginate "$PACKAGE/versions" \
+            --jq ".[] | select((.metadata.container.tags - [$keep_json]) == .metadata.container.tags) | \"\(.id) \(.metadata.container.tags | join(\",\"))\"" |
+          while read -r id image_tags; do
+            delete "$PACKAGE/versions/$id" "image version $id (${image_tags:-untagged})"
+          done
