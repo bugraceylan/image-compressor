@@ -47,10 +47,13 @@ jobs:
             delete "repos/$GITHUB_REPOSITORY/git/refs/tags/$tag" "tag $tag"
           done
 
-          # Image tags have no "v" prefix: v1.2.3 -> 1.2.3
-          keep_json=$(sed 's/^v//; s/.*/"&"/' <<< "$keep" | paste -sd, -)
-          gh api --paginate "$PACKAGE/versions" \
-            --jq ".[] | select((.metadata.container.tags - [$keep_json]) == .metadata.container.tags) | \"\(.id) \(.metadata.container.tags | join(\",\"))\"" |
+          gh api --paginate "$PACKAGE/versions" --jq '.[] | "\(.id) \(.metadata.container.tags | join(","))"' |
           while read -r id image_tags; do
-            delete "$PACKAGE/versions/$id" "image version $id (${image_tags:-untagged})"
+            kept=false
+            # Image tags have no "v" prefix: v1.2.3 -> 1.2.3
+            for image_tag in ${image_tags//,/ }; do
+              if grep -qxF "v$image_tag" <<< "$keep"; then kept=true; fi
+            done
+            if $kept; then echo "Keeping image version $id ($image_tags)"
+            else delete "$PACKAGE/versions/$id" "image version $id (${image_tags:-untagged})"; fi
           done
