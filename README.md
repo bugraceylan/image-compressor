@@ -38,6 +38,7 @@ git tag v1.2.3 && git push origin v1.2.3
 
 - The Docker image is published to `ghcr.io/bugraceylan/image-compressor:<version>` and `:latest` (nginx, port 8080)
 - The site is deployed to GitHub Pages: https://bugraceylan.github.io/image-compressor/
+- After a successful release, `.github/workflows/cleanup.yml` keeps only the three newest releases: older `v*` tags and every image version not tagged with one of them (including untagged ones) are deleted. Run it manually from the Actions tab; a manual run is a dry run by default and only lists what would be deleted
 
 Run the image locally:
 
