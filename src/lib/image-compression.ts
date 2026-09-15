@@ -147,6 +147,7 @@ export const processImages = async (
         ? await compressPdfFile(
             file,
             quality,
+            stripMetadata,
             async (image) => (await optimizeToBlob(image)).blob,
             signal
           )

@@ -26,7 +26,7 @@ const en = {
   "resolution.aria": "Resolution",
   "metadata.label": "Remove metadata",
   "metadata.hint":
-    "Strips EXIF data such as GPS location, camera model and date taken. If unchecked, EXIF is kept for JPEG files only.",
+    "Strips EXIF data such as GPS location, camera model and date taken, and PDF document properties such as author, title and creating app. If unchecked, EXIF is kept for JPEG files only.",
   "dropzone.idle":
     "Drag & drop images, Office or PDF files anywhere or click here to browse",
   "dropzone.active": "Drop your files here",
@@ -88,7 +88,7 @@ const tr: Record<Key, string> = {
   "resolution.aria": "Çözünürlük",
   "metadata.label": "Meta verileri kaldır",
   "metadata.hint":
-    "GPS konumu, kamera modeli ve çekim tarihi gibi EXIF verilerini siler. İşaret kaldırılırsa EXIF yalnızca JPEG dosyalarında korunur.",
+    "GPS konumu, kamera modeli ve çekim tarihi gibi EXIF verilerini ve yazar, başlık, oluşturan uygulama gibi PDF belge özelliklerini siler. İşaret kaldırılırsa EXIF yalnızca JPEG dosyalarında korunur.",
   "dropzone.idle":
     "Görselleri, Office veya PDF dosyalarını herhangi bir yere sürükleyip bırakın ya da seçmek için buraya tıklayın",
   "dropzone.active": "Dosyaları buraya bırakın",

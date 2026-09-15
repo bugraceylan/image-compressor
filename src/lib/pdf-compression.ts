@@ -17,17 +17,6 @@ export interface PdfResult {
   note?: "signed" | "unreadable";
 }
 
-const containsAscii = (haystack: Uint8Array, text: string) => {
-  const needle = Array.from(text, (c) => c.charCodeAt(0));
-  outer: for (let i = 0; i <= haystack.length - needle.length; i++) {
-    for (let j = 0; j < needle.length; j++) {
-      if (haystack[i + j] !== needle[j]) continue outer;
-    }
-    return true;
-  }
-  return false;
-};
-
 const inflate = async (bytes: Uint8Array) =>
   new Uint8Array(
     await new Response(
@@ -45,6 +34,7 @@ const encodeJpeg = async (pixels: ImageData, quality: number) => {
 export const compressPdfFile = async (
   file: File,
   quality: number,
+  stripMetadata: boolean,
   optimizeJpeg: JpegOptimizer,
   signal?: AbortSignal
 ): Promise<PdfResult> => {
@@ -56,12 +46,18 @@ export const compressPdfFile = async (
   });
 
   const input = new Uint8Array(await file.arrayBuffer());
-  // Any change invalidates a digital signature, so signed PDFs stay untouched.
-  if (containsAscii(input, "/ByteRange")) return unchanged("signed");
 
   // Loaded only when a PDF is added, so image-only use stays light.
-  const { PDFDocument, PDFArray, PDFName, PDFNumber, PDFRawStream, PDFRef } =
-    await import("@cantoo/pdf-lib");
+  const {
+    PDFDocument,
+    PDFArray,
+    PDFDict,
+    PDFName,
+    PDFNumber,
+    PDFRawStream,
+    PDFRef,
+    PDFStream,
+  } = await import("@cantoo/pdf-lib");
 
   let doc;
   try {
@@ -82,6 +78,29 @@ export const compressPdfFile = async (
   const name = (key: string) => PDFName.of(key);
   const numberOf = (value: unknown) =>
     value instanceof PDFNumber ? value.asNumber() : NaN;
+  const dictOf = (object: unknown) =>
+    object instanceof PDFStream
+      ? object.dict
+      : object instanceof PDFDict
+        ? object
+        : undefined;
+  // Direct children of an object: dict values and array items, not followed refs.
+  const childrenOf = (object: unknown) =>
+    object instanceof PDFArray
+      ? object.asArray()
+      : (dictOf(object)?.values() ?? []);
+
+  // Any change invalidates a digital signature, so signed PDFs stay untouched.
+  // Signature dictionaries always carry /ByteRange and may sit in a compressed
+  // object stream, so search the parsed objects, not the raw bytes.
+  const pending: unknown[] = context
+    .enumerateIndirectObjects()
+    .map(([, object]) => object);
+  while (pending.length > 0) {
+    const object = pending.pop();
+    if (dictOf(object)?.has(name("ByteRange"))) return unchanged("signed");
+    for (const child of childrenOf(object)) pending.push(child);
+  }
 
   const images: [Ref, RawStream][] = [];
   const masks = new Set<string>();
@@ -171,8 +190,39 @@ export const compressPdfFile = async (
     imagesCompressed++;
   }
 
+  // Document properties (author, title, creating app, dates), XMP packets and
+  // application private data. Objects left unreferenced are dropped so they are
+  // not written to the output.
+  let metadataRemoved = false;
+  if (stripMetadata) {
+    if (context.trailerInfo.Info) {
+      context.trailerInfo.Info = undefined;
+      metadataRemoved = true;
+    }
+    for (const [, object] of context.enumerateIndirectObjects()) {
+      for (const key of ["Metadata", "PieceInfo"]) {
+        if (dictOf(object)?.delete(name(key))) metadataRemoved = true;
+      }
+    }
+    const reachable = new Set<string>();
+    const queue: unknown[] = [context.trailerInfo.Root];
+    while (queue.length > 0) {
+      const object = queue.pop();
+      if (object instanceof PDFRef) {
+        if (reachable.has(object.tag)) continue;
+        reachable.add(object.tag);
+        queue.push(context.lookup(object));
+      } else {
+        for (const child of childrenOf(object)) queue.push(child);
+      }
+    }
+    for (const [ref] of context.enumerateIndirectObjects()) {
+      if (!reachable.has(ref.tag)) context.delete(ref);
+    }
+  }
+
   const imagesTotal = pictures.length;
-  if (imagesCompressed === 0)
+  if (imagesCompressed === 0 && !metadataRemoved)
     return { blob: file, imagesTotal, imagesCompressed };
 
   const output = await doc.save({
@@ -180,7 +230,8 @@ export const compressPdfFile = async (
     updateFieldAppearances: false,
     objectsPerTick: Infinity,
   });
-  return output.length < file.size
+  // Like images: when metadata was removed, never hand back the original.
+  return output.length < file.size || metadataRemoved
     ? {
         blob: new Blob([output], { type: "application/pdf" }),
         imagesTotal,
