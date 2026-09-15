@@ -41,8 +41,22 @@ const resolveTarget = (relsPath: string, target: string) => {
   return segments.join("/");
 };
 
+// Core properties hold title, subject, author, last modified by, revision and dates:
+// all of them go, leaving an empty root element.
+const emptyRoot = (xml: string) =>
+  xml.replace(/(<([\w:.-]+)\b[^>]*?)(?:\/>|>[\s\S]*<\/\2>)\s*$/, "$1/>");
+
+// Extended properties also carry statistics Office relies on; only the personal
+// and organizational ones are removed.
+const removePersonalAppProperties = (xml: string) =>
+  xml.replace(
+    /<((?:\w+:)?(?:Company|Manager|Template|TotalTime))\b[^>]*?(?:\/>|>[\s\S]*?<\/\1>)/g,
+    ""
+  );
+
 export const compressOfficeFile = async (
   file: File,
+  stripMetadata: boolean,
   optimize: ImageOptimizer
 ): Promise<OfficeResult> => {
   let zip: JSZip;
@@ -99,7 +113,25 @@ export const compressOfficeFile = async (
     imagesCompressed++;
   }
 
-  if (imagesCompressed === 0)
+  // Custom properties (docProps/custom.xml) stay: they carry sensitivity labels and
+  // document management IDs.
+  let metadataRemoved = false;
+  if (stripMetadata) {
+    for (const [path, clean] of [
+      ["docProps/core.xml", emptyRoot],
+      ["docProps/app.xml", removePersonalAppProperties],
+    ] as const) {
+      const part = zip.file(path);
+      if (!part) continue;
+      const xml = await part.async("string");
+      const cleaned = clean(xml);
+      if (cleaned === xml) continue;
+      zip.file(path, cleaned);
+      metadataRemoved = true;
+    }
+  }
+
+  if (imagesCompressed === 0 && !metadataRemoved)
     return { blob: file, imagesTotal, imagesCompressed };
 
   if (renamed.size > 0) {
@@ -146,7 +178,8 @@ export const compressOfficeFile = async (
     compressionOptions: { level: 6 },
     mimeType: OFFICE_TYPES[extensionOf(file.name)],
   });
-  return blob.size < file.size
+  // Like images: when metadata was removed, never hand back the original.
+  return blob.size < file.size || metadataRemoved
     ? { blob, imagesTotal, imagesCompressed }
     : { blob: file, imagesTotal, imagesCompressed: 0 };
 };

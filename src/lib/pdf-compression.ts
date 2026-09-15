@@ -24,6 +24,64 @@ const inflate = async (bytes: Uint8Array) =>
     ).arrayBuffer()
   );
 
+const RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+const PDFA_ID = "http://www.aiim.org/pdfa/ns/id/";
+const PDFUA_ID = "http://www.aiim.org/pdfua/ns/id/";
+const PDFA_EXTENSION = "http://www.aiim.org/pdfa/ns/extension/";
+const DC = "http://purl.org/dc/elements/1.1/";
+const KEPT_ATTRIBUTE_NAMESPACES = [
+  RDF,
+  "http://www.w3.org/XML/1998/namespace",
+  "http://www.w3.org/2000/xmlns/",
+];
+
+// XMP properties are the children and attributes of top-level rdf:Description
+// elements; nested ones belong to property values.
+const xmpDescriptions = (xmp: Document) =>
+  [...xmp.getElementsByTagNameNS(RDF, "Description")].filter(
+    (d) =>
+      d.parentElement?.namespaceURI === RDF &&
+      d.parentElement.localName === "RDF"
+  );
+
+const hasXmpProperty = (xmp: Document, namespace: string) =>
+  xmpDescriptions(xmp).some(
+    (d) =>
+      [...d.children].some((p) => p.namespaceURI === namespace) ||
+      [...d.attributes].some((a) => a.namespaceURI === namespace)
+  );
+
+const pdfaPartOf = (xmp: Document) =>
+  xmpDescriptions(xmp)
+    .map(
+      (d) =>
+        d.getAttributeNS(PDFA_ID, "part") ??
+        d.getElementsByTagNameNS(PDFA_ID, "part")[0]?.textContent
+    )
+    .find(Boolean)
+    ?.trim();
+
+// PDF/A and PDF/UA require the XMP packet and their conformance claims (PDF/UA also
+// dc:title), so only everything else is removed.
+const keepConformanceClaims = (xmp: Document) => {
+  const ua = hasXmpProperty(xmp, PDFUA_ID);
+  const keep = (namespace: string | null, localName: string) =>
+    namespace === PDFA_ID ||
+    namespace === PDFUA_ID ||
+    namespace === PDFA_EXTENSION ||
+    (ua && namespace === DC && localName === "title");
+  for (const d of xmpDescriptions(xmp)) {
+    for (const p of [...d.children]) {
+      if (!keep(p.namespaceURI, p.localName)) p.remove();
+    }
+    for (const a of [...d.attributes]) {
+      if (KEPT_ATTRIBUTE_NAMESPACES.includes(a.namespaceURI ?? "")) continue;
+      if (!keep(a.namespaceURI, a.localName)) d.removeAttributeNode(a);
+    }
+  }
+  return new TextEncoder().encode(new XMLSerializer().serializeToString(xmp));
+};
+
 const encodeJpeg = async (pixels: ImageData, quality: number) => {
   const canvas = new OffscreenCanvas(pixels.width, pixels.height);
   canvas.getContext("2d")!.putImageData(pixels, 0, 0);
@@ -101,6 +159,30 @@ export const compressPdfFile = async (
     if (dictOf(object)?.has(name("ByteRange"))) return unchanged("signed");
     for (const child of childrenOf(object)) pending.push(child);
   }
+
+  // The document's XMP packet, when readable: it states PDF/A and PDF/UA conformance.
+  const xmpRef = doc.catalog.get(name("Metadata"));
+  const xmpStream = context.lookup(xmpRef);
+  let xmp: Document | undefined;
+  if (xmpRef instanceof PDFRef && xmpStream instanceof PDFRawStream) {
+    const filter = xmpStream.dict.get(name("Filter"));
+    const bytes = !filter
+      ? xmpStream.contents
+      : filter === name("FlateDecode")
+        ? await inflate(xmpStream.contents).catch(() => undefined)
+        : undefined;
+    const parsed =
+      bytes &&
+      new DOMParser().parseFromString(
+        new TextDecoder().decode(bytes),
+        "application/xml"
+      );
+    if (parsed && !parsed.getElementsByTagName("parsererror").length) {
+      xmp = parsed;
+    }
+  }
+  const isPdfA = !!xmp && hasXmpProperty(xmp, PDFA_ID);
+  const conformanceClaimed = isPdfA || (!!xmp && hasXmpProperty(xmp, PDFUA_ID));
 
   const images: [Ref, RawStream][] = [];
   const masks = new Set<string>();
@@ -192,7 +274,8 @@ export const compressPdfFile = async (
 
   // Document properties (author, title, creating app, dates), XMP packets and
   // application private data. Objects left unreferenced are dropped so they are
-  // not written to the output.
+  // not written to the output. Without the information dictionary, PDF/A's rule
+  // that it must match the XMP packet no longer applies.
   let metadataRemoved = false;
   if (stripMetadata) {
     if (context.trailerInfo.Info) {
@@ -201,8 +284,20 @@ export const compressPdfFile = async (
     }
     for (const [, object] of context.enumerateIndirectObjects()) {
       for (const key of ["Metadata", "PieceInfo"]) {
+        if (conformanceClaimed && object === doc.catalog && key === "Metadata")
+          continue;
         if (dictOf(object)?.delete(name(key))) metadataRemoved = true;
       }
+    }
+    if (conformanceClaimed && xmp && xmpRef instanceof PDFRef) {
+      const cleaned = keepConformanceClaims(xmp);
+      // Written unfiltered: PDF/A-1 forbids filters on metadata streams.
+      const dict = (xmpStream as RawStream).dict.clone(context);
+      dict.delete(name("Filter"));
+      dict.delete(name("DecodeParms"));
+      dict.set(name("Length"), PDFNumber.of(cleaned.length));
+      context.assign(xmpRef, PDFRawStream.of(dict, cleaned));
+      metadataRemoved = true;
     }
     const reachable = new Set<string>();
     const queue: unknown[] = [context.trailerInfo.Root];
@@ -226,7 +321,8 @@ export const compressPdfFile = async (
     return { blob: file, imagesTotal, imagesCompressed };
 
   const output = await doc.save({
-    useObjectStreams: true,
+    // PDF/A-1 is based on PDF 1.4, which has no object streams.
+    useObjectStreams: !(isPdfA && pdfaPartOf(xmp!) === "1"),
     updateFieldAppearances: false,
     objectsPerTick: Infinity,
   });

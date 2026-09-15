@@ -151,7 +151,7 @@ export const processImages = async (
             async (image) => (await optimizeToBlob(image)).blob,
             signal
           )
-        : await compressOfficeFile(file, optimizeToBlob);
+        : await compressOfficeFile(file, stripMetadata, optimizeToBlob);
       const fileName = baseName + "-compressed" + originalExt;
       compressedImgs.push({
         fileName,
