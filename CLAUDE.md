@@ -12,8 +12,12 @@ npm run build
 
 ## Releasing a version
 
-A release is a pushed `v*` tag; `.github/workflows/release.yml` then publishes the
+A release is a commit on `master` that changes the version in `package.json`:
+`.github/workflows/release.yml` then creates the `v<version>` tag, publishes the
 Docker image and deploys GitHub Pages (https://bugraceylan.github.io/image-compressor/).
+It runs only for pushes made as the repository owner, which includes this session's
+pushes. Cloud sessions cannot push tags themselves (the git proxy returns 403), so
+never ask the user to tag: bump the version and push to `master`.
 
 On every release, when the change affects what the app does, update all of these
 in the same release:
@@ -29,11 +33,9 @@ in the same release:
    the updated text below and ask them to paste it (repo page → gear icon next to
    About). Keep the text below in sync with what the About section should say.
 
-Cloud sessions cannot push tags (the git proxy returns 403). Push the commits to
-`master`, then ask the user to create the tag, e.g. on GitHub: Releases → Draft a
-new release → tag `vX.Y.Z` on `master` → Publish (a draft does not create the tag).
-Afterwards verify the deploy: the release workflow run succeeded and the live site's
-footer shows the new version.
+After pushing, verify the deploy: the release workflow run succeeded, the tag
+exists, and the live site's footer shows the new version. If the run was skipped or
+must be repeated, the workflow can also be started by hand (workflow_dispatch).
 
 ### GitHub About text
 

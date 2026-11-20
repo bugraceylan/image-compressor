@@ -31,12 +31,14 @@ npm run lint
 
 ## Deployment
 
-Pushing a version tag runs `.github/workflows/release.yml`:
+Changing the version in `package.json` on `master` runs `.github/workflows/release.yml`, which creates the `v<version>` tag and releases it:
 
 ```bash
-git tag v1.2.3 && git push origin v1.2.3
+npm version 1.2.3 --no-git-tag-version
+git commit -am "Bump version to 1.2.3" && git push origin master
 ```
 
+- Only pushes made as the repository owner release; a `package.json` change without a new version releases nothing. Pushing a `v*` tag by hand or running the workflow from the Actions tab also releases
 - The Docker image is published to `ghcr.io/bugraceylan/image-compressor:<version>` and `:latest` (nginx, port 8080)
 - The site is deployed to GitHub Pages: https://bugraceylan.github.io/image-compressor/
 - After a successful release, `.github/workflows/cleanup.yml` keeps only the three newest releases: older `v*` tags and every image version not tagged with one of them (including untagged ones) are deleted. Run it manually from the Actions tab; a manual run is a dry run by default and only lists what would be deleted

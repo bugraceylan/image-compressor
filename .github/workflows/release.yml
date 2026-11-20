@@ -1,16 +1,62 @@
-# Pushing a version tag builds the image, publishes it to GHCR and deploys the
-# site to GitHub Pages.
-#   git tag v1.2.3 && git push origin v1.2.3
-# Result: ghcr.io/bugraceylan/image-compressor:1.2.3 and :latest,
+# Releases the version in package.json. A push to master that changes the version
+# creates the v<version> tag, builds the image, publishes it to GHCR and deploys the
+# site to GitHub Pages. Pushing a v* tag by hand still works the same way.
+# Only pushes made as the repository owner release (their own pushes, pull requests
+# they merge and Claude sessions they start); anyone else's run is skipped.
+# Result: ghcr.io/bugraceylan/image-compressor:<version> and :latest,
 #         https://bugraceylan.github.io/image-compressor/
 name: release
 
 on:
   push:
+    branches: [master]
+    paths: [package.json]
     tags: ["v*"]
+  # Releases the current version if its tag does not exist yet.
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
+  version:
+    if: github.actor == github.repository_owner
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release: ${{ steps.version.outputs.release }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          version=$(jq -r .version package.json)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          # package.json changed without a new version (e.g. a dependency): nothing to release.
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/v$version" > /dev/null 2>&1; then
+            echo "v$version already exists, skipping the release"
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Tags pushed with the workflow token start no new run, so this run releases.
+          gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/v$version" -f sha="$GITHUB_SHA" > /dev/null
+          echo "Created tag v$version"
+          echo "release=true" >> "$GITHUB_OUTPUT"
+
   image:
+    needs: version
+    if: needs.version.outputs.release == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -23,7 +69,8 @@ jobs:
         with:
           images: ghcr.io/bugraceylan/image-compressor
           tags: |
-            type=semver,pattern={{version}}
+            type=raw,value=${{ needs.version.outputs.version }}
+            type=raw,value=latest
 
       - uses: docker/login-action@v4
         with:
@@ -39,6 +86,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   pages:
+    needs: version
+    if: needs.version.outputs.release == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
