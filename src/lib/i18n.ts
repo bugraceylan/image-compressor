@@ -6,10 +6,10 @@ const en = {
   "theme.dark": "Dark",
   "theme.system": "System",
   "language.toggle": "Change language",
-  "intro.title": "Free & Open Source Image and Document Compressor",
+  "intro.title": "Free & Open Source Image, Video and Document Compressor",
   "intro.subtitle":
-    "Shrink images and the pictures inside Word, Excel, PowerPoint and PDF files instantly and securely, right on your device. No uploads, no limits, no APIs. Works offline and keeps your files private.",
-  "quality.label": "Image Quality: {value}",
+    "Shrink images, videos and the pictures inside Word, Excel, PowerPoint and PDF files instantly and securely, right on your device. No uploads, no limits, no APIs. Works offline and keeps your files private.",
+  "quality.label": "Quality: {value}",
   "quality.hint": "Higher quality = larger file size",
   "quality.recommended": "Recommended",
   "quality.moderate": "Moderate",
@@ -26,21 +26,25 @@ const en = {
   "resolution.aria": "Resolution",
   "metadata.label": "Remove metadata",
   "metadata.hint":
-    "Strips EXIF data such as GPS location, camera model and date taken, and document properties such as author, title and company from Office and PDF files. If unchecked, EXIF is kept for JPEG files only.",
+    "Strips EXIF data such as GPS location, camera model and date taken, document properties such as author, title and company from Office and PDF files, and tags such as title and location from videos. If unchecked, EXIF is kept for JPEG files only.",
   "dropzone.idle":
-    "Drag & drop images, Office or PDF files anywhere or click here to browse",
+    "Drag & drop images, videos, Office or PDF files anywhere or click here to browse",
   "dropzone.active": "Drop your files here",
   "dropzone.upload": "Upload files",
   "actions.downloadAll": "Download All (ZIP)",
   "actions.reset": "Reset",
   "results.emptyTitle": "No Compressed Files",
   "results.emptyText":
-    "Upload images or Word, Excel, PowerPoint and PDF files to see your results here.",
+    "Upload images, videos or Word, Excel, PowerPoint and PDF files to see your results here.",
   "results.download": "Download {name}",
   "document.images": "{done} of {total} images compressed",
   "document.noImages": "No compressible images found",
   "document.signed": "Digitally signed, left unchanged",
   "document.unreadable": "Could not be opened: password-protected or damaged",
+  "video.unsupported":
+    "This browser cannot re-encode this video, left unchanged",
+  "video.original":
+    "Already smaller than the re-encoded version, left unchanged",
   "summary.totalOriginal": "Total original ({count} files)",
   "summary.totalOriginalOne": "Total original (1 file)",
   "summary.saved": "Saved",
@@ -50,7 +54,7 @@ const en = {
   "progress.running": "Compressing... {value}",
   "footer.version": "Version {version}, view source on GitHub",
   "toast.invalidFile":
-    "Invalid file! Please upload only JPG, PNG, WEBP images or DOCX, XLSX, PPTX, PDF files.",
+    "Invalid file! Please upload only JPG, PNG, WEBP images, MP4, MOV, WEBM videos or DOCX, XLSX, PPTX, PDF files.",
   "toast.tooManyFiles":
     "Too many files: only the first {max} of {count} files were added.",
   "toast.noZip": "No zip file available.",
@@ -68,10 +72,10 @@ const tr: Record<Key, string> = {
   "theme.dark": "Koyu",
   "theme.system": "Sistem",
   "language.toggle": "Dili değiştir",
-  "intro.title": "Ücretsiz ve Açık Kaynak Görsel ve Belge Sıkıştırıcı",
+  "intro.title": "Ücretsiz ve Açık Kaynak Görsel, Video ve Belge Sıkıştırıcı",
   "intro.subtitle":
-    "Görselleri ve Word, Excel, PowerPoint, PDF dosyalarındaki resimleri anında ve güvenle, doğrudan cihazınızda küçültün. Yükleme yok, sınır yok, API yok. Çevrimdışı çalışır ve dosyalarınızı gizli tutar.",
-  "quality.label": "Görsel Kalitesi: {value}",
+    "Görselleri, videoları ve Word, Excel, PowerPoint, PDF dosyalarındaki resimleri anında ve güvenle, doğrudan cihazınızda küçültün. Yükleme yok, sınır yok, API yok. Çevrimdışı çalışır ve dosyalarınızı gizli tutar.",
+  "quality.label": "Kalite: {value}",
   "quality.hint": "Daha yüksek kalite = daha büyük dosya",
   "quality.recommended": "Önerilen",
   "quality.moderate": "Orta",
@@ -88,21 +92,24 @@ const tr: Record<Key, string> = {
   "resolution.aria": "Çözünürlük",
   "metadata.label": "Meta verileri kaldır",
   "metadata.hint":
-    "GPS konumu, kamera modeli ve çekim tarihi gibi EXIF verilerini ve Office ile PDF dosyalarındaki yazar, başlık, şirket gibi belge özelliklerini siler. İşaret kaldırılırsa EXIF yalnızca JPEG dosyalarında korunur.",
+    "GPS konumu, kamera modeli ve çekim tarihi gibi EXIF verilerini Office ile PDF dosyalarındaki yazar, başlık, şirket gibi belge özelliklerini ve videolardaki başlık, konum gibi etiketleri siler. İşaret kaldırılırsa EXIF yalnızca JPEG dosyalarında korunur.",
   "dropzone.idle":
-    "Görselleri, Office veya PDF dosyalarını herhangi bir yere sürükleyip bırakın ya da seçmek için buraya tıklayın",
+    "Görselleri, videoları, Office veya PDF dosyalarını herhangi bir yere sürükleyip bırakın ya da seçmek için buraya tıklayın",
   "dropzone.active": "Dosyaları buraya bırakın",
   "dropzone.upload": "Dosya yükle",
   "actions.downloadAll": "Tümünü İndir (ZIP)",
   "actions.reset": "Sıfırla",
   "results.emptyTitle": "Sıkıştırılmış Dosya Yok",
   "results.emptyText":
-    "Sonuçları burada görmek için görsel ya da Word, Excel, PowerPoint veya PDF dosyası yükleyin.",
+    "Sonuçları burada görmek için görsel, video ya da Word, Excel, PowerPoint veya PDF dosyası yükleyin.",
   "results.download": "{name} dosyasını indir",
   "document.images": "{total} görselden {done} tanesi sıkıştırıldı",
   "document.noImages": "Sıkıştırılabilir görsel bulunamadı",
   "document.signed": "Dijital imzalı, değiştirilmedi",
   "document.unreadable": "Açılamadı: parola korumalı ya da bozuk",
+  "video.unsupported":
+    "Bu tarayıcı videoyu yeniden kodlayamıyor, değiştirilmedi",
+  "video.original": "Yeniden kodlanmış hâlinden zaten küçük, değiştirilmedi",
   "summary.totalOriginal": "Toplam orijinal ({count} dosya)",
   "summary.totalOriginalOne": "Toplam orijinal (1 dosya)",
   "summary.saved": "Tasarruf",
@@ -112,7 +119,7 @@ const tr: Record<Key, string> = {
   "progress.running": "Sıkıştırılıyor... {value}",
   "footer.version": "Sürüm {version}, kaynak kodu GitHub'da görüntüle",
   "toast.invalidFile":
-    "Geçersiz dosya! Lütfen yalnızca JPG, PNG, WEBP görselleri ya da DOCX, XLSX, PPTX, PDF dosyaları yükleyin.",
+    "Geçersiz dosya! Lütfen yalnızca JPG, PNG, WEBP görselleri, MP4, MOV, WEBM videoları ya da DOCX, XLSX, PPTX, PDF dosyaları yükleyin.",
   "toast.tooManyFiles":
     "Çok fazla dosya: {count} dosyadan yalnızca ilk {max} tanesi eklendi.",
   "toast.noZip": "ZIP dosyası hazır değil.",

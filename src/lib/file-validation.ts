@@ -2,6 +2,7 @@ import { toast } from "sonner";
 import { t } from "./i18n";
 import { isOfficeFile } from "./office-compression";
 import { isPdfFile } from "./pdf-compression";
+import { isVideoFile } from "./video-compression";
 
 // Allowed image formats
 export const ALLOWED_FORMATS = [
@@ -14,13 +15,14 @@ export const ALLOWED_FORMATS = [
 // Maximum number of files per upload
 export const MAX_FILES = 1000;
 
-// Validate file type: images by MIME type, documents by extension
+// Validate file type: images by MIME type, documents and videos also by extension
 // (browsers often report an empty or vendor-specific type for them).
 export const validateFileType = (file: File): boolean => {
   return (
     ALLOWED_FORMATS.includes(file.type.toLowerCase()) ||
     isOfficeFile(file) ||
-    isPdfFile(file)
+    isPdfFile(file) ||
+    isVideoFile(file)
   );
 };
 

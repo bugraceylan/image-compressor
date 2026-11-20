@@ -40,6 +40,16 @@ export const useImageCompression = () => {
     setStripMetadata(event.target.checked);
   };
 
+  // Video results hold object URLs; free them once a newer result replaces them.
+  useEffect(
+    () => () => {
+      for (const item of compressedImages) {
+        if (item.kind === "video") URL.revokeObjectURL(item.content);
+      }
+    },
+    [compressedImages]
+  );
+
   const resetCompression = () => {
     setValue(60);
     setScale(100);

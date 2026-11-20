@@ -6,6 +6,7 @@ import {
   FileSpreadsheet,
   FileText,
   MoveRight,
+  Play,
   Presentation,
 } from "lucide-react";
 import { memo } from "react";
@@ -31,17 +32,29 @@ const ImagePreviewCard = memo(
     // Subscribes this memoized card to language changes (number formatting).
     const t = useT();
     const isDocument = props.kind === "document";
+    const isVideo = props.kind === "video";
     const DocumentIcon = documentIcon(props.fileName);
 
     const documentStatus = () => {
       if (props.note === "signed") return t("document.signed");
       if (props.note === "unreadable") return t("document.unreadable");
+      if (isVideo) return videoStatus();
       if (!props.imagesTotal) return t("document.noImages");
       return t("document.images", {
         done: props.imagesCompressed ?? 0,
         total: props.imagesTotal,
       });
     };
+
+    function videoStatus() {
+      if (props.note === "unsupported") return t("video.unsupported");
+      if (props.note === "original") return t("video.original");
+      const { width, height, outputWidth, outputHeight } = props;
+      if (!width || !height) return "";
+      return outputWidth === width && outputHeight === height
+        ? `${width}×${height}`
+        : `${width}×${height} → ${outputWidth}×${outputHeight}`;
+    }
 
     return (
       <div className="bg-background flex items-center justify-between gap-2 rounded-lg border p-2 pe-3 will-change-transform">
@@ -52,6 +65,41 @@ const ImagePreviewCard = memo(
                 className="text-muted-foreground size-6"
                 aria-hidden="true"
               />
+            </div>
+          ) : isVideo ? (
+            <div className="bg-accent relative aspect-square shrink-0 cursor-pointer rounded-[6px]">
+              <PhotoView
+                width={props.outputWidth ?? 1280}
+                height={props.outputHeight ?? 720}
+                render={({ attrs }) => (
+                  <div {...attrs}>
+                    {/* Keep clicks and drags on the controls from closing or moving the viewer. */}
+                    <video
+                      src={props.content}
+                      controls
+                      playsInline
+                      className="size-full"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                )}
+              >
+                <div>
+                  {/* #t=0.1 makes browsers paint a first frame as the thumbnail. */}
+                  <video
+                    src={`${props.content}#t=0.1`}
+                    muted
+                    playsInline
+                    preload="metadata"
+                    aria-label={props.fileName}
+                    className="size-12 rounded-[6px] object-cover"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center rounded-[6px] bg-black/25">
+                    <Play className="text-[#fafafa]" />
+                  </div>
+                </div>
+              </PhotoView>
             </div>
           ) : (
             <div className="bg-accent relative aspect-square shrink-0 cursor-pointer rounded-[6px]">
@@ -83,14 +131,14 @@ const ImagePreviewCard = memo(
                 </span>
               </span>
             </span>
-            {isDocument && (
+            {(isDocument || isVideo) && (
               <span className="text-muted-foreground truncate text-xs">
                 {documentStatus()}
               </span>
             )}
           </div>
         </div>
-        {props.note !== "unreadable" && (
+        {props.note !== "unreadable" && props.note !== "unsupported" && (
           <Button
             size="icon"
             variant="ghost"

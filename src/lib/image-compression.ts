@@ -4,6 +4,7 @@ import type { CompressedImage } from "../types/image-compressor";
 import { compressOfficeFile, isOfficeFile } from "./office-compression";
 import { compressPdfFile, isPdfFile } from "./pdf-compression";
 import { stripJpegMetadata } from "./strip-jpeg-metadata";
+import { compressVideoFile, isVideoFile } from "./video-compression";
 
 export const compressImage = async (
   file: File,
@@ -123,7 +124,6 @@ export const processImages = async (
   const compressedImgs: CompressedImage[] = [];
   const zip = new JSZip();
   const img = zip.folder("compressed_images");
-  let counter = files.length;
 
   const optimizeToBlob = async (image: File) => {
     signal?.throwIfAborted();
@@ -134,65 +134,105 @@ export const processImages = async (
     };
   };
 
-  for (const file of files) {
-    signal?.throwIfAborted();
-    const dotIndex = file.name.lastIndexOf(".");
-    const baseName = dotIndex !== -1 ? file.name.slice(0, dotIndex) : file.name;
-    const originalExt = dotIndex !== -1 ? file.name.slice(dotIndex) : "";
-    const rateOf = (size: number) =>
-      (((size - file.size) / file.size) * 100).toFixed(2);
+  let done = 0;
+  const report = (fraction = 0) =>
+    onProgress(Math.floor(((done + fraction) / files.length) * 100));
 
-    if (isOfficeFile(file) || isPdfFile(file)) {
-      const doc = isPdfFile(file)
-        ? await compressPdfFile(
-            file,
-            quality,
-            stripMetadata,
-            async (image) => (await optimizeToBlob(image)).blob,
-            signal
-          )
-        : await compressOfficeFile(file, stripMetadata, optimizeToBlob);
-      const fileName = baseName + "-compressed" + originalExt;
-      compressedImgs.push({
-        fileName,
-        originalImageSize: file.size,
-        compressedImageSize: doc.blob.size,
-        fileType: doc.blob.type || file.type,
-        content: await readAsDataUrl(doc.blob),
-        compressionPercentage: rateOf(doc.blob.size),
-        kind: "document",
-        imagesTotal: doc.imagesTotal,
-        imagesCompressed: doc.imagesCompressed,
-        note: doc.note,
-      });
-      if (doc.note !== "unreadable") img?.file(fileName, doc.blob);
-    } else {
-      const result = await optimizeImage(file, quality, scale, stripMetadata);
-      // PNG is re-encoded as JPEG, so the extension must follow the actual output type.
-      const outputExt =
-        result.type === file.type
-          ? originalExt
-          : "." + result.type.split("/")[1].replace("jpeg", "jpg");
+  // An aborted batch never reaches the UI, so its video object URLs are freed here.
+  try {
+    for (const file of files) {
+      signal?.throwIfAborted();
+      const dotIndex = file.name.lastIndexOf(".");
+      const baseName =
+        dotIndex !== -1 ? file.name.slice(0, dotIndex) : file.name;
+      const originalExt = dotIndex !== -1 ? file.name.slice(dotIndex) : "";
+      const rateOf = (size: number) =>
+        (((size - file.size) / file.size) * 100).toFixed(2);
 
-      compressedImgs.push({
-        fileName: baseName + "-compressed" + outputExt,
-        originalImageSize: file.size,
-        compressedImageSize: result.size,
-        fileType: result.type,
-        content: result.dataUrl,
-        compressionPercentage: rateOf(result.size),
-        kind: "image",
-      });
+      if (isVideoFile(file)) {
+        const video = await compressVideoFile(
+          file,
+          quality,
+          scale,
+          stripMetadata,
+          report,
+          signal
+        );
+        const size = video.blob.size;
+        const fileName =
+          video.note === "unsupported" || video.note === "original"
+            ? file.name
+            : baseName + "-compressed" + video.extension;
+        compressedImgs.push({
+          fileName,
+          originalImageSize: file.size,
+          compressedImageSize: size,
+          fileType: video.blob.type || file.type,
+          // Videos are too large for data URLs; the hook revokes these when replaced.
+          content: URL.createObjectURL(video.blob),
+          compressionPercentage: rateOf(size),
+          kind: "video",
+          note: video.note,
+          width: video.width,
+          height: video.height,
+          outputWidth: video.outputWidth,
+          outputHeight: video.outputHeight,
+        });
+        if (video.note !== "unsupported") img?.file(fileName, video.blob);
+      } else if (isOfficeFile(file) || isPdfFile(file)) {
+        const doc = isPdfFile(file)
+          ? await compressPdfFile(
+              file,
+              quality,
+              stripMetadata,
+              async (image) => (await optimizeToBlob(image)).blob,
+              signal
+            )
+          : await compressOfficeFile(file, stripMetadata, optimizeToBlob);
+        const fileName = baseName + "-compressed" + originalExt;
+        compressedImgs.push({
+          fileName,
+          originalImageSize: file.size,
+          compressedImageSize: doc.blob.size,
+          fileType: doc.blob.type || file.type,
+          content: await readAsDataUrl(doc.blob),
+          compressionPercentage: rateOf(doc.blob.size),
+          kind: "document",
+          imagesTotal: doc.imagesTotal,
+          imagesCompressed: doc.imagesCompressed,
+          note: doc.note,
+        });
+        if (doc.note !== "unreadable") img?.file(fileName, doc.blob);
+      } else {
+        const result = await optimizeImage(file, quality, scale, stripMetadata);
+        // PNG is re-encoded as JPEG, so the extension must follow the actual output type.
+        const outputExt =
+          result.type === file.type
+            ? originalExt
+            : "." + result.type.split("/")[1].replace("jpeg", "jpg");
 
-      const blob = await (await fetch(result.dataUrl)).blob();
-      img?.file(`${baseName}-compressed${outputExt}`, blob);
+        compressedImgs.push({
+          fileName: baseName + "-compressed" + outputExt,
+          originalImageSize: file.size,
+          compressedImageSize: result.size,
+          fileType: result.type,
+          content: result.dataUrl,
+          compressionPercentage: rateOf(result.size),
+          kind: "image",
+        });
+
+        const blob = await (await fetch(result.dataUrl)).blob();
+        img?.file(`${baseName}-compressed${outputExt}`, blob);
+      }
+
+      done++;
+      report();
     }
-
-    counter = counter - 1;
-    const progress = Math.floor(
-      ((files.length - counter) / files.length) * 100
-    );
-    onProgress(progress);
+  } catch (error) {
+    for (const item of compressedImgs) {
+      if (item.kind === "video") URL.revokeObjectURL(item.content);
+    }
+    throw error;
   }
 
   const zipBlob = await zip.generateAsync({ type: "blob" });
